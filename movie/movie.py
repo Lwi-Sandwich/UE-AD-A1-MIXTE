@@ -12,9 +12,12 @@ type_defs = load_schema_from_path('movie.graphql')
 query = QueryType()
 mutation = MutationType()
 movie = ObjectType('Movie')
+actor = ObjectType('Actor')
+movie.set_field('actors', r.resolve_actors_in_movie)
 query.set_field('movie_with_id', r.movie_with_id)
+query.set_field('actor_with_id', r.actor_with_id)
 mutation.set_field('update_movie_rate', r.update_movie_rate)
-schema = make_executable_schema(type_defs, movie, query, mutation)
+schema = make_executable_schema(type_defs, movie, query, mutation, actor)
 
 # root message
 @app.route("/", methods=['GET'])

@@ -95,7 +95,8 @@ def add_booking(userid):
 		with grpc.insecure_channel(BOOKING_HOST) as channel:
 			stub = booking_pb2_grpc.BookingStub(channel)
 			req = request.get_json()
-			bookings_request = stub.AddBooking(booking_pb2.NewBookingInfo(userid=userid, date=req['date'], movieid=req['id']))
+			bookings = stub.AddBooking(booking_pb2.NewBookingInfo(userid=userid, date=req['date'], movieid=req['id']))
+			return make_response(jsonify({"userid": bookings.userid, "dates": [{"date": d.date, "movies": [i for i in d.movies]} for d in bookings.dates]}), 200)
 	except Exception as e:
 		print(e)
 		return make_response(jsonify({'error': 'bad input parameter'}), 400)

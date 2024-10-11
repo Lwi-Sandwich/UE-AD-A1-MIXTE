@@ -29,3 +29,8 @@ def actor_with_id(_, info, _id):
         for a in actors:
             if a['id'] == _id:
                 return a
+
+def movies(_, info):
+    with open('./data/movies.json', 'r') as file:
+        movies = json.load(file)['movies']
+        return movies

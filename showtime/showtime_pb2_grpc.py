@@ -41,7 +41,7 @@ class ShowtimeStub(object):
                 _registered_method=True)
         self.GetListShowtimes = channel.unary_stream(
                 '/Showtime/GetListShowtimes',
-                request_serializer=showtime__pb2.Empty.SerializeToString,
+                request_serializer=showtime__pb2.ShowtimeEmpty.SerializeToString,
                 response_deserializer=showtime__pb2.ShowtimeData.FromString,
                 _registered_method=True)
 
@@ -71,7 +71,7 @@ def add_ShowtimeServicer_to_server(servicer, server):
             ),
             'GetListShowtimes': grpc.unary_stream_rpc_method_handler(
                     servicer.GetListShowtimes,
-                    request_deserializer=showtime__pb2.Empty.FromString,
+                    request_deserializer=showtime__pb2.ShowtimeEmpty.FromString,
                     response_serializer=showtime__pb2.ShowtimeData.SerializeToString,
             ),
     }
@@ -127,7 +127,7 @@ class Showtime(object):
             request,
             target,
             '/Showtime/GetListShowtimes',
-            showtime__pb2.Empty.SerializeToString,
+            showtime__pb2.ShowtimeEmpty.SerializeToString,
             showtime__pb2.ShowtimeData.FromString,
             options,
             channel_credentials,

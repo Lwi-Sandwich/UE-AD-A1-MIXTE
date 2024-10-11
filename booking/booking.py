@@ -2,7 +2,11 @@ import grpc
 from concurrent import futures
 import booking_pb2
 import booking_pb2_grpc
+import showtime_pb2
+import showtime_pb2_grpc
 import json
+
+SHOWTIME = "localhost:3003"
 
 class BookingServicer(booking_pb2_grpc.BookingServicer):
 
@@ -21,7 +25,17 @@ class BookingServicer(booking_pb2_grpc.BookingServicer):
         return booking_pb2.UserBooking(userid='', dates=[])
 
     def AddBooking(self, request, context):
-        # TODO check showtime
+        # Check showtime
+        try:
+            with grpc.insecure_channel(SHOWTIME) as channel:
+                stub = showtime_pb2_grpc.ShowtimeStub(channel)
+                time = stub.GetShowtimeByDate(showtime_pb2.ShowtimeDate(date=request.date))
+                if request.movieid not in time.movies:
+                    print('Not found')
+                    return booking_pb2.UserBooking(userid='', dates=[])
+        except Exception as e:
+            print(e)
+            return booking_pb2.UserBooking(userid='', dates=[])
         for b in self.db:
             if b['userid'] == request.userid:
                 for d in b['dates']:

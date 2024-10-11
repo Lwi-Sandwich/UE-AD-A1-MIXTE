@@ -79,7 +79,7 @@ def movieinfos_user(userid):
 	try:
         with grpc.insecure_channel(BOOKING_HOST) as channel:
             stub = booking_pb2_grpc.BookingStub(channel)
-            bookings_request = stub.GetUserBookings(showtime_pb2.GetUserBookings(UserID=userid))
+            bookings_request = stub.GetUserBookings(booking_pb2.GetUserBookings(UserID=userid))
     except Exception as e:
         print(e)
         return make_response(jsonify({'error': 'bad input parameter'}), 400)
@@ -95,11 +95,13 @@ def movieinfos_user(userid):
 
 @app.route("/bookings/<userid>", methods=['POST'])
 def add_booking(userid):
-	req = request.get_json()
-	r = requests.post(BOOKING_HOST + str(userid), json=req)
-	if r.status_code != 200:
-		return make_response(jsonify({"error": "booking not available"}), r.status_code)
-	return make_response(jsonify(r.json()), 200)
+	try:
+        with grpc.insecure_channel(BOOKING_HOST) as channel:
+            stub = booking_pb2_grpc.BookingStub(channel)
+            bookings_request = stub.AddBooking(booking_pb2.AddBooking(userid=userid, date=request.date, movie=request.movie))
+    except Exception as e:
+        print(e)
+        return make_response(jsonify({'error': 'bad input parameter'}), 400)
 	
 
 if __name__ == "__main__":

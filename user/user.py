@@ -80,7 +80,6 @@ def movieinfos_user(userid):
 	except Exception as e:
 		print(e)
 		return make_response(jsonify({'error': 'bad input parameter'}), 400)
-	#bookings_request = requests.get(BOOKING_HOST + str(userid))
 	movies_request = requests.post(MOVIES_HOST, json={"query": 'query{movies{id, title, rating, director}}'})
 	if movies_request.status_code != 200:
 		return make_response(jsonify({'error': 'bad input parameter'}), 400)

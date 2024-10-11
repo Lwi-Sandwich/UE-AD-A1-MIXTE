@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+service Showtime {
+    rpc GetShowtimeByDate(ShowtimeDate) returns (ShowtimeData) {};
+}
+
+message ShowtimeDate {
+    string date = 1;
+}
+
+message ShowtimeData {
+    string date = 1;
+    repeated string movies = 2;
+}

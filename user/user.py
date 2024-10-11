@@ -4,13 +4,13 @@ import requests
 import json
 from werkzeug.exceptions import NotFound
 
-# CALLING gRPC requests
-# import grpc
-# from concurrent import futures
-# import booking_pb2
-# import booking_pb2_grpc
-# import movie_pb2
-# import movie_pb2_grpc
+#CALLING gRPC requests
+import grpc
+from concurrent import futures
+import booking_pb2
+import booking_pb2_grpc
+import movie_pb2
+import movie_pb2_grpc
 
 # CALLING GraphQL requests
 # todo to complete
@@ -66,22 +66,30 @@ def user_id(userid):
 
 @app.route('/bookings/<userid>', methods=['GET'])
 def bookings_user(userid):
-	r = requests.get(BOOKING_HOST + str(userid))
-	if r.status_code != 200:
-		return make_response(jsonify({'error': 'bad input parameter'}), 400)
-	return make_response(jsonify(r.json()), 200)
+	try:
+        with grpc.insecure_channel(BOOKING_HOST) as channel:
+            stub = booking_pb2_grpc.BookingStub(channel)
+            bookings = stub.GetUserBookings(showtime_pb2.GetUserBookings(UserID=userid))
+    except Exception as e:
+        print(e)
+        return booking_pb2.UserBooking(userid="", dates="")
 
 @app.route('/movieinfos/<userid>', methods=['GET'])
 def movieinfos_user(userid):
-	bookings_request = requests.get(BOOKING_HOST + str(userid))
-	movies_request = requests.post(BOOKING_HOST, json={"query": 'query{movies{id, title, rating, director}}'})
-	if bookings_request.status_code != 200:
-		return make_response(jsonify({'error': 'bad input parameter'}), 400)
+	try:
+        with grpc.insecure_channel(BOOKING_HOST) as channel:
+            stub = booking_pb2_grpc.BookingStub(channel)
+            bookings_request = stub.GetUserBookings(showtime_pb2.GetUserBookings(UserID=userid))
+    except Exception as e:
+        print(e)
+        return make_response(jsonify({'error': 'bad input parameter'}), 400)
+	#bookings_request = requests.get(BOOKING_HOST + str(userid))
+	movies_request = requests.post(MOVIES_HOST, json={"query": 'query{movies{id, title, rating, director}}'})
 	if movies_request.status_code != 200:
 		return make_response(jsonify({'error': 'bad input parameter'}), 400)
-	bookings = bookings_request.json()
+	bookings = bookings_request
 	movies = movies_request.json()
-	ids_in_bookings = [m for b in bookings["dates"] for m in b['movies']]
+	ids_in_bookings = [m for b in bookings.dates for m in b.movies]
 	res = {"movies": [m for m in movies if m['id'] in ids_in_bookings]}
 	return make_response(jsonify(res), 200)
 
@@ -92,6 +100,7 @@ def add_booking(userid):
 	if r.status_code != 200:
 		return make_response(jsonify({"error": "booking not available"}), r.status_code)
 	return make_response(jsonify(r.json()), 200)
+	
 
 if __name__ == "__main__":
 	print("Server running in port %s"%(PORT))

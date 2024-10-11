@@ -2,6 +2,7 @@ syntax = "proto3";
 
 service Showtime {
     rpc GetShowtimeByDate(ShowtimeDate) returns (ShowtimeData) {};
+    rpc GetListShowtimes(Empty) returns (stream ShowtimeData) {}
 }
 
 message ShowtimeDate {
@@ -11,4 +12,7 @@ message ShowtimeDate {
 message ShowtimeData {
     string date = 1;
     repeated string movies = 2;
+}
+
+message Empty {
 }

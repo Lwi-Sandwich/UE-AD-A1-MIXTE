@@ -14,7 +14,11 @@ class ShowtimeServicer(showtime_pb2_grpc.ShowtimeServicer):
         for showtime in self.db:
             if showtime['date'] == request.date:
                 return showtime_pb2.ShowtimeData(date=showtime['date'], movies=showtime['movies'])
-        return movie_pb2.MovieData(date="", showtime="")
+        return showtime_pb2.ShowtimeData(date="", showtime="")
+
+    def GetListShowtimes(self, request, context):
+        for showtime in self.db:
+            yield showtime_pb2.ShowtimeData(date=showtime['date'], movies=showtime['movies'])
 
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))

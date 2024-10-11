@@ -39,6 +39,11 @@ class ShowtimeStub(object):
                 request_serializer=showtime__pb2.ShowtimeDate.SerializeToString,
                 response_deserializer=showtime__pb2.ShowtimeData.FromString,
                 _registered_method=True)
+        self.GetListShowtimes = channel.unary_stream(
+                '/Showtime/GetListShowtimes',
+                request_serializer=showtime__pb2.Empty.SerializeToString,
+                response_deserializer=showtime__pb2.ShowtimeData.FromString,
+                _registered_method=True)
 
 
 class ShowtimeServicer(object):
@@ -50,12 +55,23 @@ class ShowtimeServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def GetListShowtimes(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_ShowtimeServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'GetShowtimeByDate': grpc.unary_unary_rpc_method_handler(
                     servicer.GetShowtimeByDate,
                     request_deserializer=showtime__pb2.ShowtimeDate.FromString,
+                    response_serializer=showtime__pb2.ShowtimeData.SerializeToString,
+            ),
+            'GetListShowtimes': grpc.unary_stream_rpc_method_handler(
+                    servicer.GetListShowtimes,
+                    request_deserializer=showtime__pb2.Empty.FromString,
                     response_serializer=showtime__pb2.ShowtimeData.SerializeToString,
             ),
     }
@@ -85,6 +101,33 @@ class Showtime(object):
             target,
             '/Showtime/GetShowtimeByDate',
             showtime__pb2.ShowtimeDate.SerializeToString,
+            showtime__pb2.ShowtimeData.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetListShowtimes(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_stream(
+            request,
+            target,
+            '/Showtime/GetListShowtimes',
+            showtime__pb2.Empty.SerializeToString,
             showtime__pb2.ShowtimeData.FromString,
             options,
             channel_credentials,

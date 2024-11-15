@@ -24,7 +24,7 @@ with open('{}/data/users.json'.format("."), "r") as jsf:
 
 @app.route("/", methods=['GET'])
 def home():
-	return "<h1 style='color:blue'>Welcome to the User service!</h1>"
+	return render_template("user.html")
 
 @app.route("/users", methods=['GET'])
 def user():

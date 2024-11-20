@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link
+      href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900|Material+Icons"
+      rel="stylesheet"
+      type="text/css"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/quasar@2.17.2/dist/quasar.prod.css"
+      rel="stylesheet"
+      type="text/css"
+    />
+  </head>
+
+  <body>
+    <div id="user">
+      <div class="div-display-users">
+        <q-table
+          title="Users"
+          :rows="user_rows"
+          :columns="user_columns"
+          row-key="id"
+          class="users-table"
+        >
+          <template v-slot:body-cell-actions="props">
+            <q-td :props="props">
+              <q-btn
+                color="red"
+                label="Delete User"
+                @click="deleteUser(props.row)"
+              />
+            </q-td>
+          </template>
+        </q-table>
+      </div>
+      <div class="div-add-user-form">
+        <q-form @submit.prevent="submitUser" class="add-use-form">
+          <div class="add-user-inputs">
+            <div class="user-name-input">
+              <q-input
+                dense
+                outlined
+                v-model="name"
+                label="Name"
+                hint="The user's name"
+                lazy-rules
+                :rules="[ val => val && val.length > 0 || 'User name is empty']"
+              />
+            </div>
+            <div class="last-active-input">
+              <q-input
+                dense
+                outlined
+                v-model="last_active"
+                label="Last Active"
+                hint="The unix timestamp where the user was last active"
+                lazy-rules
+                :rules="[ val => val && val.length > 0 || 'Last active is empty',
+                val => /^\d+$/.test(val.trim()) || 'Last active is not a unix timestamp']"
+              />
+            </div>
+          </div>
+          <div>
+            <q-btn label="Add user" type="submit" color="green" />
+          </div>
+        </q-form>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/quasar@2.17.2/dist/quasar.umd.prod.js"></script>
+
+    <script>
+      const { ref, computed, onMounted } = Vue;
+
+      const app = Vue.createApp({
+        setup() {
+          const showNotification = (message, color) => {
+            Quasar.Notify.create({
+              message: message,
+              color: color,
+              timeout: 3000,
+            });
+          };
+          const name = ref("");
+          const last_active = ref("");
+
+          const addUserId = computed(() => {
+            return name.value.trim().toLowerCase().split(" ").join("_");
+          });
+
+          const user_rows = ref([]);
+          const areUsersLoading = ref(true);
+
+          const user_columns = ref([
+            {
+              name: "id",
+              required: true,
+              label: "User ID",
+              align: "center",
+              field: (row) => row.id,
+              format: (val) => `${val}`,
+              sortable: true,
+            },
+            {
+              name: "name",
+              align: "center",
+              label: "User Name",
+              field: (row) => row.name,
+              sortable: true,
+            },
+            {
+              name: "last_active",
+              align: "center",
+              label: "Last Active",
+              field: (row) => row.last_active,
+              sortable: true,
+            },
+            {
+              name: "actions",
+              label: "Actions",
+              align: "center",
+              required: true,
+            },
+          ]);
+
+          const submitUser = async () => {
+            const url = `http://localhost:3004/users/${addUserId.value}`;
+            try {
+              // Regex for "only numbers"
+              if (/^\d+$/.test(last_active.value?.trim()) && name.value) {
+                const response = await fetch(url, {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({
+                    id: addUserId.value, // You should pass the correct ID structure here
+                    name: name.value,
+                    last_active: Number(last_active.value),
+                  }),
+                });
+
+                if (response.ok) {
+                  const jsonResponse = await response.json();
+                  user_rows.value.push({
+                    id: addUserId.value,
+                    name: name.value,
+                    last_active: last_active.value,
+                  });
+                  console.log("Successfully added user");
+                  showNotification("Successfully added user", "green");
+                } else {
+                  throw new Error(`Response status: ${response.status}`);
+                }
+              }
+            } catch (error) {
+              console.error(error.message);
+            }
+          };
+
+          const deleteUser = async (row) => {
+            //TODO : remplir cette fonction
+            const url = `http://localhost:3004/users/${row.id}`;
+            try {
+              const response = await fetch(url, {
+                method: "DELETE",
+              });
+              if (!response.ok) {
+                throw new Error(`Response status: ${response.status}`);
+              }
+              const json = await response.json();
+              user_rows.value = user_rows.value.filter(
+                (user) => user.id !== row.id
+              );
+              console.log("Successfully deleted user : " + row.id);
+              showNotification("Successfully deleted user", "red");
+            } catch (error) {
+              console.error(error.message);
+            }
+          };
+
+          onMounted(async () => {
+            const url = "http://localhost:3004/users";
+            try {
+              const response = await fetch(url);
+              if (!response.ok) {
+                throw new Error(`Response status: ${response.status}`);
+              }
+              const json = await response.json();
+              user_rows.value = json;
+              areUsersLoading.value = false;
+            } catch (error) {
+              console.error(error.message);
+              areUsersLoading.value = false;
+            }
+          });
+
+          return {
+            name,
+            last_active,
+            addUserId,
+            user_columns,
+            user_rows,
+            submitUser,
+            deleteUser,
+          };
+        },
+      });
+
+      app.use(Quasar);
+      app.mount("#user");
+    </script>
+  </body>
+</html>
+
+<style>
+  .div-add-user-form {
+    margin-top: 30px;
+  }
+</style>

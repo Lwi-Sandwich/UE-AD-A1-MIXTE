@@ -40,7 +40,7 @@ def get_spec():
 # REST API
 @app.route("/", methods=['GET'])
 def home():
-	return "<h1 style='color:blue'>Welcome to the User service!</h1>"
+	return render_template("user.html")
 
 @app.route("/users", methods=['GET'])
 def user():

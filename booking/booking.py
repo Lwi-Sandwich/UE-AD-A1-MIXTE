@@ -30,14 +30,15 @@ class BookingServicer(booking_pb2_grpc.BookingServicer):
             with grpc.insecure_channel(SHOWTIME) as channel:
                 stub = showtime_pb2_grpc.ShowtimeStub(channel)
                 time = stub.GetShowtimeByDate(showtime_pb2.ShowtimeDate(date=request.date))
+                # Return empty booking if failed
                 if request.movieid not in time.movies:
-                    print('Not found')
                     return booking_pb2.UserBooking(userid='', dates=[])
-        except Exception as e:
-            print(e)
+        except Exception:
             return booking_pb2.UserBooking(userid='', dates=[])
+        # Goal is to find user to see if creating one is needed
         for b in self.db:
             if b['userid'] == request.userid:
+                # See if we need to create a date in db
                 for d in b['dates']:
                     if d['date'] == request.date:
                         if request.movieid not in d['movies']:
@@ -47,10 +48,10 @@ class BookingServicer(booking_pb2_grpc.BookingServicer):
                     b['dates'].append({'date': request.date, 'movies': [request.movieid]})
                     write(self.db)
                     return booking_pb2.UserBooking(userid=b['userid'], dates=[booking_pb2.Date(date=i['date'], movies=i["movies"]) for i in b['dates']])
+        # Does not exist, create user
         b = {'userid': request.userid, "dates": [{'date': request.date, 'movies': [request.movieid]}]}
         self.db.append(b)
         write(self.db)
-        print("aaa")
         return booking_pb2.UserBooking(userid=b['userid'], dates=[booking_pb2.Date(date=i['date'], movies=i["movies"]) for i in b['dates']])
 
 def write(bookings):

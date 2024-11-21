@@ -52,10 +52,10 @@ def add_user(userid):
 	for u in users:
 		if str(u['id']) == str(userid):
 			return make_response(jsonify({'error': 'User ID already exists'}), 409)
-	users['last_active'] = time.time()
+	# users['last_active'] = time.time()
 	users.append(req)
 	write(users)
-	res = make_response(jsonify({"message":"user added"}),200)
+	res = make_response(jsonify(req),200)
 	return res
 
 @app.route('/users/<userid>', methods=['DELETE'])
@@ -111,7 +111,6 @@ def add_booking(userid):
 			stub = booking_pb2_grpc.BookingStub(channel)
 			req = request.get_json()
 			bookings = stub.AddBooking(booking_pb2.NewBookingInfo(userid=userid, date=req['date'], movieid=req['id']))
-			users['last_active'] = time.time()
 			write(users)
 			return make_response(jsonify({"userid": bookings.userid, "dates": [{"date": d.date, "movies": [i for i in d.movies]} for d in bookings.dates]}), 200)
 	except Exception as e:

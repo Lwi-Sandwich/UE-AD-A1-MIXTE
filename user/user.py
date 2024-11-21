@@ -52,7 +52,9 @@ def add_user(userid):
 	for u in users:
 		if str(u['id']) == str(userid):
 			return make_response(jsonify({'error': 'User ID already exists'}), 409)
-	# users['last_active'] = time.time()
+	if str(req['id']) != str(userid):
+		return make_response(jsonify({'error': 'User ID does not match URL'}), 409)
+	req['last_active'] = time.time()
 	users.append(req)
 	write(users)
 	res = make_response(jsonify(req),200)
@@ -76,17 +78,35 @@ def user_id(userid):
 
 @app.route('/bookings/<userid>', methods=['GET'])
 def bookings_user(userid):
+	# Chek if user exists
+	user = None
+	for u in users:
+		if str(u['id']) == str(userid):
+			user = u
+			break
+	if user is None:
+		return make_response(jsonify({'error': 'User not found'}), 404)
 	try:
 		# GRPC calls
 		with grpc.insecure_channel(BOOKING_HOST) as channel:
 			stub = booking_pb2_grpc.BookingStub(channel)
 			bookings = stub.GetUserBookings(booking_pb2.UserID(id=userid))
+			user["last_active"] = time.time()
+			write(users)
 			return make_response(jsonify({"userid": bookings.userid, "dates": [{"date": d.date, "movies": [i for i in d.movies]} for d in bookings.dates]}), 200)
 	except Exception as e:
 		return make_response(jsonify({"Error raised by bookings": str(e)}), 400)
 
 @app.route('/movieinfos/<userid>', methods=['GET'])
 def movieinfos_user(userid):
+	# Check if user exists
+	user = None
+	for u in users:
+		if str(u['id']) == str(userid):
+			user = u
+			break
+	if user is None:
+		return make_response(jsonify({'error': 'User not found'}), 404)
 	try:
 		# GRPC for bookings
 		with grpc.insecure_channel(BOOKING_HOST) as channel:
@@ -106,11 +126,20 @@ def movieinfos_user(userid):
 
 @app.route("/bookings/<userid>", methods=['POST'])
 def add_booking(userid):
+	# Check if user exists
+	user = None
+	for u in users:
+		if str(u['id']) == str(userid):
+			user = u
+			break
+	if user is None:
+		return make_response(jsonify({'error': 'User not found'}), 404)
 	try:
 		with grpc.insecure_channel(BOOKING_HOST) as channel:
 			stub = booking_pb2_grpc.BookingStub(channel)
 			req = request.get_json()
 			bookings = stub.AddBooking(booking_pb2.NewBookingInfo(userid=userid, date=req['date'], movieid=req['id']))
+			user["last_active"] = time.time()
 			write(users)
 			return make_response(jsonify({"userid": bookings.userid, "dates": [{"date": d.date, "movies": [i for i in d.movies]} for d in bookings.dates]}), 200)
 	except Exception as e:

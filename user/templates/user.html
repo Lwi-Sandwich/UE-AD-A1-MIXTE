@@ -11,11 +11,13 @@
       rel="stylesheet"
       type="text/css"
     />
+    <!-- Quasar is a component library for Vue.js-->
   </head>
 
   <body>
     <div id="user">
       <div class="div-display-users">
+        <!-- The table that will be used to put the users into-->
         <q-table
           title="Users"
           :rows="user_rows"
@@ -24,6 +26,7 @@
           class="users-table"
         >
           <template v-slot:body-cell-actions="props">
+            <!-- Necessary to add quasar buttons inside the cell-->
             <q-td :props="props">
               <q-btn
                 color="red"
@@ -35,6 +38,7 @@
         </q-table>
       </div>
       <div class="div-add-user-form">
+        <!--The form that alows the user to add a user in the db-->
         <q-form @submit.prevent="submitUser" class="add-use-form">
           <div class="add-user-inputs">
             <div class="user-name-input">
@@ -59,6 +63,7 @@
                 :rules="[ val => val && val.length > 0 || 'Last active is empty',
                 val => /^\d+$/.test(val.trim()) || 'Last active is not a unix timestamp']"
               />
+              <!--This regex checks if the string only has numbers-->
             </div>
           </div>
           <div>
@@ -68,6 +73,7 @@
       </div>
     </div>
 
+    <!--CDN for Vue and Quasar-->
     <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/quasar@2.17.2/dist/quasar.umd.prod.js"></script>
 
@@ -77,23 +83,30 @@
       const app = Vue.createApp({
         setup() {
           const showNotification = (message, color) => {
+            //This function is called when we want to display a notification at the bottom of the screen
             Quasar.Notify.create({
               message: message,
               color: color,
               timeout: 3000,
             });
           };
+
+          //Stores the input of the form. It's updated in real time
           const name = ref("");
           const last_active = ref("");
 
+          //Computes the ID of a user based on its name
           const addUserId = computed(() => {
             return name.value.trim().toLowerCase().split(" ").join("_");
           });
 
-          const user_rows = ref([]);
+          const user_rows = ref([]); //The rows of the table that will actually be displayed
+          //Since fetch is asynchronous, we need to wait for the promise to resolve before displaying
+          //users in the table
           const areUsersLoading = ref(true);
 
           const user_columns = ref([
+            //The columns of the table
             {
               name: "id",
               required: true,
@@ -149,6 +162,9 @@
                     name: name.value,
                     last_active: last_active.value,
                   });
+                  //The endpoint automatically updates the user.json file.
+                  //However, we do not refetch the databse once its done, we only add a new row
+                  //For the user. Please note that refs are cached.
                   console.log("Successfully added user");
                   showNotification("Successfully added user", "green");
                 } else {
@@ -172,18 +188,24 @@
               const json = await response.json();
               user_rows.value = user_rows.value.filter(
                 (user) => user.id !== row.id
-              );
+              ); //Again, we update the table without refetching it
               console.log("Successfully deleted user : " + row.id);
               showNotification("Successfully deleted user", "red");
             } catch (error) {
               console.error(error.message);
+              showNotification(
+                "An error occured when trying to delete the user",
+                "red"
+              );
             }
           };
 
           onMounted(async () => {
+            //Called once the page is mounted, after it has been initialized
             const url = "http://localhost:3004/users";
             try {
               const response = await fetch(url);
+              //We GET every users there
               if (!response.ok) {
                 throw new Error(`Response status: ${response.status}`);
               }
@@ -204,7 +226,7 @@
             user_rows,
             submitUser,
             deleteUser,
-          };
+          }; //Needed to access those variables and functions outside of setup()
         },
       });
 

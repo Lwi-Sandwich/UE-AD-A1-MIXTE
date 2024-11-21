@@ -136,7 +136,7 @@
                     "Content-Type": "application/json",
                   },
                   body: JSON.stringify({
-                    id: addUserId.value, // You should pass the correct ID structure here
+                    id: addUserId.value,
                     name: name.value,
                     last_active: Number(last_active.value),
                   }),
@@ -161,7 +161,6 @@
           };
 
           const deleteUser = async (row) => {
-            //TODO : remplir cette fonction
             const url = `http://localhost:3004/users/${row.id}`;
             try {
               const response = await fetch(url, {

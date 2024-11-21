@@ -37,7 +37,7 @@ paths:
       operationId: get_user
       responses:
         "200":
-          description: full JSON
+          description: All of the users
           content:
             application/json:
               schema:
@@ -72,6 +72,8 @@ paths:
                 $ref: '#/components/schemas/User'
         "409":
           description: an existing item already exists
+        "400":
+          description: invalid parameters
     delete:
       tags:
       - admins
@@ -88,8 +90,12 @@ paths:
           type: string
       responses:
         "200":
-          description: item deleted
-        "400":
+          description: deletes the user and returns it
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "404":
           description: ID not found
     get:
       tags:
@@ -111,8 +117,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
-        "400":
-          description: bad input parameter
+        "404":
+          description: not found
   /bookings/{userid}:
     get:
       tags:
@@ -136,7 +142,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/BookingsUser'
         "400":
-          description: user not found
+          description: Error raised by bookings
     post:
       tags:
       - developers
@@ -165,7 +171,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/DateItem'
         "400":
-          description: user not found
+          description: Error contacting bookings
   /movieinfos/{userid}:
     get:
       tags:
@@ -189,19 +195,14 @@ paths:
               schema:
                 $ref: '#/components/schemas/AllMovies'
         "400":
-          description: user not found
+          description:
 
 components:
   schemas:
     AllUser:
-      required:
-      - user
-      type: object
-      properties:
-        user:
-          type: array
-          items:
-            $ref: '#/components/schemas/User'
+      type: array
+      items:
+        $ref: '#/components/schemas/User'
     User:
       required:
       - id
@@ -212,7 +213,7 @@ components:
         id:
           type: string
           example: "chris_rivers"
-        movies:
+        name:
           type: string
           example:  "Chris Rivers"
         last_active:
